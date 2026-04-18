@@ -1,148 +1,148 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Détective Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détective Game</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #0B0F1A;
+            color: white;
+            overflow: hidden;
+        }
 
-<style>
+        .header {
+            padding: 15px;
+            background: #111827;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
 
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: #0B0F1A;
-  color: white;
-}
+        .scene {
+            position: relative;
+            width: 100vw;
+            height: calc(100vh - 120px); /* Ajuste selon la taille du header/footer */
+            display: flex;
+            justify-content: center;
+            background: black;
+        }
 
-/* HEADER */
-.header {
-  padding: 15px;
-  background: #111827;
-  text-align: center;
-  font-weight: bold;
-}
+        .scene img {
+            height: 100%;
+            width: auto;
+            display: block;
+        }
 
-/* SCENE */
-.scene {
-  position: relative;
-  height: 70vh;
-  overflow: hidden;
-}
+        /* Conteneur pour que les zones restent alignées sur l'image */
+        .image-container {
+            position: relative;
+            height: 100%;
+        }
 
-.scene img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+        .zone {
+            position: absolute;
+            /* border: 2px solid red;  <-- Décommente pour voir les zones pendant tes tests */
+            cursor: pointer;
+            z-index: 10;
+        }
 
-/* ZONES CLIQUABLES */
-.zone {
-  position: absolute;
-  border-radius: 10px;
-}
+        .inventory {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #111827;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            min-height: 50px;
+        }
 
-.zone:hover {
-  background: rgba(255,255,255,0.1);
-  cursor: pointer;
-}
+        .item {
+            padding: 10px 20px;
+            background: #1F2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            font-size: 14px;
+            animation: pop 0.3s ease-out;
+        }
 
-/* INVENTAIRE */
-.inventory {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: #111827;
-  display: flex;
-  justify-content: space-around;
-  padding: 10px;
-}
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
-.item {
-  padding: 10px;
-  background: #1F2937;
-  border-radius: 10px;
-  font-size: 14px;
-}
-
-/* POPUP */
-.popup {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1F2937;
-  padding: 15px;
-  border-radius: 10px;
-  display: none;
-}
-
-</style>
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(31, 41, 55, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #3B82F6;
+            display: none;
+            z-index: 100;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="header">
-🕵️ Mission : Vol au Musée
-</div>
+<div class="header">🕵️ Mission : Vol au Musée</div>
 
 <div class="scene">
+    <div class="image-container">
+        <img src="Image1.jpg" alt="Scène du crime">
 
-<img src="https://images.unsplash.com/photo-1554907984-15263bfd63bd?q=80&w=1000&auto=format&fit=crop">
-
-<!-- zones -->
-<div class="zone" style="top:30%; left:20%; width:20%; height:25%;" onclick="find('vitrine')"></div>
-<div class="zone" style="top:60%; left:40%; width:20%; height:20%;" onclick="find('empreintes')"></div>
-<div class="zone" style="top:10%; left:70%; width:20%; height:20%;" onclick="find('camera')"></div>
-
+        <div class="zone" style="top: 28%; left: 15%; width: 40%; height: 25%;" onclick="find('vitrine')"></div>
+        
+        <div class="zone" style="top: 0%; left: 80%; width: 20%; height: 15%;" onclick="find('camera')"></div>
+        
+        <div class="zone" style="top: 60%; left: 45%; width: 40%; height: 20%;" onclick="find('empreintes')"></div>
+    </div>
 </div>
 
-<div class="inventory" id="inventory">
-</div>
-
+<div class="inventory" id="inventory"></div>
 <div class="popup" id="popup"></div>
 
 <script>
+    let found = [];
 
-let found = [];
+    function find(item) {
+        if (!found.includes(item)) {
+            found.push(item);
+            let label = "";
+            if (item === "vitrine") label = "🪟 Vitrine cassée";
+            if (item === "empreintes") label = "👣 Empreintes";
+            if (item === "camera") label = "📷 Caméra coupée";
 
-function find(item) {
+            // Ajout à l'inventaire
+            let div = document.createElement("div");
+            div.className = "item";
+            div.textContent = label;
+            document.getElementById("inventory").appendChild(div);
 
-  if (!found.includes(item)) {
-    found.push(item);
+            showPopup(label + " trouvé !");
+        }
 
-    let label = "";
+        if (found.length === 3) {
+            setTimeout(() => {
+                showPopup("✨ Félicitations Détective ! Tous les indices sont réunis.");
+            }, 1000);
+        }
+    }
 
-    if (item === "vitrine") label = "🪟 Vitrine cassée";
-    if (item === "empreintes") label = "👣 Empreintes";
-    if (item === "camera") label = "📷 Caméra coupée";
-
-    // ajout inventaire
-    let div = document.createElement("div");
-    div.className = "item";
-    div.textContent = label;
-    document.getElementById("inventory").appendChild(div);
-
-    // popup
-    showPopup(label + " trouvé !");
-  }
-
-  if (found.length === 3) {
-    setTimeout(() => {
-      showPopup("Tous les indices trouvés. Passe à l’analyse.");
-    }, 500);
-  }
-}
-
-function showPopup(text) {
-  let popup = document.getElementById("popup");
-  popup.textContent = text;
-  popup.style.display = "block";
-
-  setTimeout(() => {
-    popup.style.display = "none";
-  }, 2000);
-}
-
+    function showPopup(text) {
+        let popup = document.getElementById("popup");
+        popup.textContent = text;
+        popup.style.display = "block";
+        setTimeout(() => { popup.style.display = "none"; }, 2500);
+    }
 </script>
 
 </body>
