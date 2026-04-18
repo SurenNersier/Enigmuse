@@ -3,145 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Détective Game</title>
+    <title>Enquête au Musée : Le Diamant Phoenix</title>
     <style>
+        :root {
+            --neon-blue: #00d4ff;
+            --dark-bg: #050a14;
+            --panel-bg: #101827;
+        }
+
         body {
             margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: #0B0F1A;
+            padding: 0;
+            background-color: var(--dark-bg);
             color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
         }
 
+        /* En-tête style HUD */
         .header {
+            background: var(--panel-bg);
             padding: 15px;
-            background: #111827;
             text-align: center;
+            border-bottom: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 3px;
             font-weight: bold;
-            font-size: 1.2rem;
         }
 
-        .scene {
+        /* Zone de jeu */
+        .game-area {
             position: relative;
             width: 100vw;
-            height: calc(100vh - 120px); /* Ajuste selon la taille du header/footer */
+            height: 70vh;
             display: flex;
             justify-content: center;
-            background: black;
+            align-items: center;
+            background: #000;
         }
 
-        .scene img {
-            height: 100%;
-            width: auto;
-            display: block;
-        }
-
-        /* Conteneur pour que les zones restent alignées sur l'image */
         .image-container {
             position: relative;
             height: 100%;
+            display: inline-block;
         }
 
-        .zone {
+        .main-img {
+            height: 100%;
+            width: auto;
+            display: block;
+            border: 1px solid #222;
+        }
+
+        /* Zones cliquables (Hitboxes) */
+        .hitbox {
             position: absolute;
-            /* border: 2px solid red;  <-- Décommente pour voir les zones pendant tes tests */
             cursor: pointer;
-            z-index: 10;
+            z-index: 5;
+            /* border: 1px dashed rgba(0, 212, 255, 0.5); /* Décommente pour debug */
         }
 
+        .hitbox:hover {
+            background: rgba(0, 212, 255, 0.1);
+            box-shadow: inset 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+
+        /* Inventaire en bas */
         .inventory {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: #111827;
+            height: 20vh;
+            background: var(--panel-bg);
             display: flex;
             justify-content: center;
-            gap: 15px;
-            padding: 20px;
-            min-height: 50px;
+            align-items: center;
+            gap: 20px;
+            border-top: 1px solid #333;
         }
 
-        .item {
-            padding: 10px 20px;
-            background: #1F2937;
-            border: 1px solid #374151;
-            border-radius: 8px;
-            font-size: 14px;
-            animation: pop 0.3s ease-out;
+        .slot {
+            width: 100px;
+            height: 100px;
+            background: #1f2937;
+            border: 2px solid #374151;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #9ca3af;
+            transition: all 0.3s ease;
         }
 
-        @keyframes pop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        .slot.found {
+            border-color: var(--neon-blue);
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            background: #0f172a;
         }
 
-        .popup {
+        .slot-icon {
+            font-size: 30px;
+            margin-bottom: 5px;
+            filter: grayscale(1);
+        }
+
+        .slot.found .slot-icon {
+            filter: grayscale(0);
+        }
+
+        /* Fenêtre de dialogue */
+        #dialog-box {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(31, 41, 55, 0.95);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #3B82F6;
+            width: 400px;
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
             display: none;
             z-index: 100;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        .btn {
+            background: var(--neon-blue);
+            color: black;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            background: white;
         }
     </style>
 </head>
 <body>
 
-<div class="header">🕵️ Mission : Vol au Musée</div>
+<div class="header">🔍 Dossier criminel : Vol au Musée National</div>
 
-<div class="scene">
+<div class="game-area">
     <div class="image-container">
-        <img src="Image1.jpg" alt="Scène du crime">
+        <img src="Image1.jpg" id="target" class="main-img" onerror="this.src='https://images.unsplash.com/photo-1554907984-15263bfd63bd?q=80&w=1200&auto=format&fit=crop'">
 
-        <div class="zone" style="top: 28%; left: 15%; width: 40%; height: 25%;" onclick="find('vitrine')"></div>
-        
-        <div class="zone" style="top: 0%; left: 80%; width: 20%; height: 15%;" onclick="find('camera')"></div>
-        
-        <div class="zone" style="top: 60%; left: 45%; width: 40%; height: 20%;" onclick="find('empreintes')"></div>
+        <div class="hitbox" style="top: 25%; left: 15%; width: 40%; height: 35%;" onclick="analyze('vitrine')"></div>
+        <div class="hitbox" style="top: 0%; left: 80%; width: 15%; height: 15%;" onclick="analyze('camera')"></div>
+        <div class="hitbox" style="top: 65%; left: 45%; width: 45%; height: 25%;" onclick="analyze('empreintes')"></div>
     </div>
 </div>
 
-<div class="inventory" id="inventory"></div>
-<div class="popup" id="popup"></div>
+<div class="inventory">
+    <div id="item-vitrine" class="slot">
+        <span class="slot-icon">🪟</span>
+        <span>VITRINE</span>
+    </div>
+    <div id="item-camera" class="slot">
+        <span class="slot-icon">📷</span>
+        <span>CAMÉRA</span>
+    </div>
+    <div id="item-empreintes" class="slot">
+        <span class="slot-icon">👣</span>
+        <span>EMPREINTES</span>
+    </div>
+</div>
+
+<div id="dialog-box">
+    <h3 id="dialog-title" style="color: var(--neon-blue);">Analyse en cours...</h3>
+    <p id="dialog-text"></p>
+    <button class="btn" onclick="closeDialog()">Continuer</button>
+</div>
 
 <script>
-    let found = [];
+    let evidenceFound = {
+        vitrine: false,
+        camera: false,
+        empreintes: false
+    };
 
-    function find(item) {
-        if (!found.includes(item)) {
-            found.push(item);
-            let label = "";
-            if (item === "vitrine") label = "🪟 Vitrine cassée";
-            if (item === "empreintes") label = "👣 Empreintes";
-            if (item === "camera") label = "📷 Caméra coupée";
-
-            // Ajout à l'inventaire
-            let div = document.createElement("div");
-            div.className = "item";
-            div.textContent = label;
-            document.getElementById("inventory").appendChild(div);
-
-            showPopup(label + " trouvé !");
+    const details = {
+        vitrine: {
+            title: "ANALYSE BALISTIQUE",
+            text: "Étonnant ! Le verre a été brisé de l'intérieur vers l'extérieur. Le voleur était déjà caché dans le musée avant la fermeture."
+        },
+        camera: {
+            title: "DONNÉES SYSTÈME",
+            text: "Le flux vidéo a été coupé à 23h04 précise par un signal Bluetooth externe. C'est un travail de hacker expérimenté."
+        },
+        empreintes: {
+            title: "RELEVÉ D'EMPREINTES",
+            text: "Des traces de boue argileuse... Ce type de terre ne se trouve que dans les jardins privés du Conservateur du musée !"
         }
+    };
 
-        if (found.length === 3) {
-            setTimeout(() => {
-                showPopup("✨ Félicitations Détective ! Tous les indices sont réunis.");
-            }, 1000);
+    function analyze(item) {
+        if (!evidenceFound[item]) {
+            evidenceFound[item] = true;
+            
+            // Mise à jour visuelle de l'inventaire
+            document.getElementById('item-' + item).classList.add('found');
+            
+            // Affichage du dialogue
+            showDialog(details[item].title, details[item].text);
+            
+            checkVictory();
         }
     }
 
-    function showPopup(text) {
-        let popup = document.getElementById("popup");
-        popup.textContent = text;
-        popup.style.display = "block";
-        setTimeout(() => { popup.style.display = "none"; }, 2500);
+    function showDialog(title, text) {
+        document.getElementById('dialog-title').innerText = title;
+        document.getElementById('dialog-text').innerText = text;
+        document.getElementById('dialog-box').style.display = 'block';
+    }
+
+    function closeDialog() {
+        document.getElementById('dialog-box').style.display = 'none';
+    }
+
+    function checkVictory() {
+        if (evidenceFound.vitrine && evidenceFound.camera && evidenceFound.empreintes) {
+            setTimeout(() => {
+                showDialog("🎯 AFFAIRE RÉSOLUE", "Toutes les preuves désignent le Conservateur. Il a simulé le vol pour toucher l'assurance ! Bravo détective.");
+            }, 1000);
+        }
     }
 </script>
 
